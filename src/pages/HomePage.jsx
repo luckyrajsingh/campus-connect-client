@@ -1,54 +1,59 @@
-// src/pages/HomePage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import api from '../api/api'; // 👈 Use our central API client
+import ItemCard from '../components/ItemCard';
+import SearchBox from '../components/SearchBox';
 
 const HomePage = () => {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/items")
-      .then((res) => res.json())
-      .then((data) => setItems(data))
-      .catch((err) => console.error(err));
-  }, []);
+    const fetchItems = async () => {
+      setLoading(true);
+      try {
+        // Append the search query to the URL
+        const res = await api.get(`/items?search=${searchKeyword}`);
+        setItems(res.data);
+      } catch (error) {
+        console.error('Failed to fetch items:', error);
+        alert('Could not fetch items.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [searchKeyword]); // Refetch when searchKeyword changes
+
+  const handleSearch = (keyword) => {
+    setSearchKeyword(keyword);
+  };
+
+  if (loading) {
+    return <h2 className="text-center mt-8">Loading items...</h2>;
+  }
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold text-center mb-6">
         Latest Lost & Found Items
       </h1>
 
-      {items.length === 0 ? (
-        <p className="text-center text-gray-500">No items have been reported yet.</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {items.map((item) => (
-            <div
-              key={item._id}
-              className="bg-white shadow-md rounded-lg p-5 border hover:shadow-xl transition"
-            >
-              {/* If imageUrl exists */}
-              {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-40 object-cover rounded mb-4"
-                />
-              )}
+      {/* Add the SearchBox component */}
+      <SearchBox onSearch={handleSearch} />
 
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                {item.name}
-              </h2>
-              <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-              <p className="text-gray-500 text-xs">📍 {item.location}</p>
-              <p className="text-gray-400 text-xs mt-1">
-                Reported on {new Date(item.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap justify-center">
+        {items.length > 0 ? (
+          // Use the ItemCard component for a cleaner layout
+          items.map((item) => <ItemCard key={item._id} item={item} />)
+        ) : (
+          <p className="text-center text-gray-500">No items found.</p>
+        )}
+      </div>
     </div>
   );
 };
 
 export default HomePage;
+
