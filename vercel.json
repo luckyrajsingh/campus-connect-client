@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://campus-connect-api-0549.onrender.com/api/:path*"
+    }
+  ]
+}
