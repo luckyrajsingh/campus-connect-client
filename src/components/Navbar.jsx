@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -7,7 +6,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("userToken");
-    window.location.href = "/"; // redirect to home
+    window.location.href = "/login"; // redirect to login after logout
   };
 
   return (
@@ -19,9 +18,16 @@ const Navbar = () => {
         </Link>
 
         {/* Right Side - Links */}
-        <div className="space-x-4">
+        <div className="space-x-4 flex items-center">
           {token ? (
             <>
+              {/* 👇 This is the new link we are adding */}
+              <Link
+                to="/dashboard"
+                className="hover:bg-blue-700 px-3 py-2 rounded transition"
+              >
+                My Dashboard
+              </Link>
               <Link
                 to="/post-item"
                 className="hover:bg-blue-700 px-3 py-2 rounded transition"
