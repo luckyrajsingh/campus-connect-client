@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-// This is the definitive version with the most direct logout logic.
+// This is the definitive version with the professional design AND the robust logout logic.
 const Navbar = () => {
   const token = localStorage.getItem("userToken");
 
@@ -22,7 +22,7 @@ const Navbar = () => {
                 Post an Item
               </Link>
               <button
-                // THE FIX: Logic is now directly inside the onClick.
+                // THE FIX: Logic is directly inside the onClick to ensure it always runs.
                 onClick={() => {
                   localStorage.removeItem("userToken");
                   window.location.href = "/";
