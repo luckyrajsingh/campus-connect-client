@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api'; // 👈 Use our central API client
+import { Link } from 'react-router-dom';
+import api from '../api/api';
 import ItemCard from '../components/ItemCard';
 import SearchBox from '../components/SearchBox';
 
@@ -12,48 +13,70 @@ const HomePage = () => {
     const fetchItems = async () => {
       setLoading(true);
       try {
-        // Append the search query to the URL
         const res = await api.get(`/items?search=${searchKeyword}`);
         setItems(res.data);
       } catch (error) {
         console.error('Failed to fetch items:', error);
-        alert('Could not fetch items.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchItems();
-  }, [searchKeyword]); // Refetch when searchKeyword changes
+  }, [searchKeyword]);
 
   const handleSearch = (keyword) => {
     setSearchKeyword(keyword);
   };
 
-  if (loading) {
-    return <h2 className="text-center mt-8">Loading items...</h2>;
-  }
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        Latest Lost & Found Items
-      </h1>
+    <div className="bg-gray-50 min-h-screen">
+      {/* 1. Hero Section */}
+      <section className="bg-gray-800 text-white text-center py-24 px-6">
+        <h1 className="text-5xl font-bold mb-4">Lost Something? Found Something?</h1>
+        <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+          The central hub for all lost and found items on campus. Let's help each other reconnect with our belongings.
+        </p>
+        <Link
+          to="/post-item"
+          className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 text-lg shadow-lg"
+        >
+          Report an Item
+        </Link>
+      </section>
 
-      {/* Add the SearchBox component */}
-      <SearchBox onSearch={handleSearch} />
+      {/* 2. Main Content Section */}
+      <section className="container mx-auto p-8">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Recent Listings</h2>
+        <p className="text-center text-gray-500 mb-10">
+          Browse the latest items reported by the campus community.
+        </p>
+        
+        <SearchBox onSearch={handleSearch} />
 
-      <div className="flex flex-wrap justify-center">
-        {items.length > 0 ? (
-          // Use the ItemCard component for a cleaner layout
-          items.map((item) => <ItemCard key={item._id} item={item} />)
+        {loading ? (
+          <p className="text-center text-gray-600 mt-10">Loading items...</p>
         ) : (
-          <p className="text-center text-gray-500">No items found.</p>
+          <div className="flex flex-wrap justify-center gap-8 mt-6">
+            {items.length > 0 ? (
+              items.map((item) => <ItemCard key={item._id} item={item} />)
+            ) : (
+              <div className="text-center bg-white p-12 rounded-lg shadow-md mt-6">
+                <h3 className="text-xl font-semibold text-gray-700">No Items Found</h3>
+                <p className="text-gray-500 mt-2">Try a different search or be the first to post a new item!</p>
+              </div>
+            )}
+          </div>
         )}
-      </div>
+      </section>
+
+      {/* 3. Footer */}
+      <footer className="bg-gray-800 text-white text-center py-6 mt-16">
+        <div className="container mx-auto">
+          <p>&copy; {new Date().getFullYear()} CampusConnect. A College Project by Lucky Raj Singh.</p>
+        </div>
+      </footer>
     </div>
   );
 };
 
 export default HomePage;
-

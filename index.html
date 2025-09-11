@@ -1,13 +1,287 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusConnect - Lost & Found</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .modal-backdrop.active, .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+         .modal.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-indigo-600 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-800">CampusConnect</h1>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="#" class="text-gray-600 hover:text-indigo-600 transition">My Dashboard</a>
+                        <button onclick="openModal()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-sm flex items-center space-x-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            <span>Post an Item</span>
+                        </button>
+                        <a href="#" class="text-gray-600 hover:text-indigo-600 transition">Logout</a>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="mobile-menu-button" class="text-gray-600 hover:text-indigo-600">
+                             <i data-lucide="menu" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+             <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden px-4 pt-2 pb-4 space-y-2 bg-white border-t">
+                <a href="#" class="block text-gray-600 hover:text-indigo-600 transition">My Dashboard</a>
+                 <button onclick="openModal()" class="w-full text-left bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-lg hover:bg-indigo-200 transition duration-300 flex items-center space-x-2">
+                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    <span>Post an Item</span>
+                </button>
+                <a href="#" class="block text-gray-600 hover:text-indigo-600 transition">Logout</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">Lost Something? Find it Here.</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-500">The central hub for all lost and found items on campus.</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="max-w-3xl mx-auto mb-10">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterItems()" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Search for items (e.g., 'blue water bottle', 'keys')...">
+                </div>
+            </div>
+            
+            <!-- Items Grid -->
+            <div class="border-t border-gray-200 pt-8">
+                 <h3 class="text-2xl font-bold text-gray-800 mb-6">Latest Lost & Found Items</h3>
+                <div id="itemsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Item cards will be injected here by JavaScript -->
+                </div>
+                <div id="no-items-message" class="text-center py-16 hidden">
+                    <div class="inline-block bg-gray-100 p-6 rounded-full">
+                        <i data-lucide="archive" class="w-16 h-16 text-gray-400"></i>
+                    </div>
+                    <h4 class="mt-6 text-xl font-semibold text-gray-700">No items found.</h4>
+                    <p class="mt-2 text-gray-500">Looks like nothing has been reported yet. Be the first!</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-500">
+                <p>&copy; 2025 CampusConnect. All Rights Reserved.</p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Post Item Modal Backdrop -->
+    <div id="modalBackdrop" class="modal-backdrop" onclick="closeModal()"></div>
+    
+    <!-- Post Item Modal -->
+    <div id="postItemModal" class="modal w-full max-w-lg mx-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full">
+            <form id="postItemForm" class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Report a Lost or Found Item</h2>
+                    <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="item-name" class="block text-sm font-medium text-gray-700">Item Name</label>
+                        <input type="text" id="item-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., Black iPhone 14 Pro">
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Add details like color, brand, or any identifying marks."></textarea>
+                    </div>
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700">Last Seen / Found At</label>
+                        <input type="text" id="location" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., Library, 2nd Floor">
+                    </div>
+                     <div>
+                        <label for="item-image" class="block text-sm font-medium text-gray-700">Image (Optional)</label>
+                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                        <span>Upload a file</span>
+                                        <input id="file-upload" name="file-upload" type="file" class="sr-only">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button type="button" onclick="closeModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">Cancel</button>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        lucide.createIcons();
+
+        // --- Mock Data ---
+        let items = [
+            { id: 1, name: 'Blue Hydro Flask', description: 'Has a small dent near the bottom and a sticker of a mountain range.', location: 'Library, 3rd Floor', imageUrl: 'https://placehold.co/400x300/3498db/ffffff?text=Bottle', timestamp: '2 hours ago' },
+            { id: 2, name: 'Set of Keys', description: 'A set of three keys on a red carabiner. One key is a car key for a Toyota.', location: 'Student Union Food Court', imageUrl: 'https://placehold.co/400x300/e74c3c/ffffff?text=Keys', timestamp: '5 hours ago' },
+            { id: 3, name: 'AirPods Pro Case', description: 'White case, no AirPods inside. Has a few scratches on the front.', location: 'Campus Green', imageUrl: 'https://placehold.co/400x300/95a5a6/ffffff?text=Case', timestamp: 'Yesterday' },
+            { id: 4, name: 'Black North Face Jacket', description: 'Size medium. Left pocket has a small hole inside.', location: 'Gymnasium', imageUrl: 'https://placehold.co/400x300/34495e/ffffff?text=Jacket', timestamp: 'Yesterday' },
+        ];
+
+        const itemsGrid = document.getElementById('itemsGrid');
+        const noItemsMessage = document.getElementById('no-items-message');
+
+        // --- Render Items ---
+        function renderItems(itemsToRender) {
+            itemsGrid.innerHTML = '';
+            if (itemsToRender.length === 0) {
+                noItemsMessage.classList.remove('hidden');
+                itemsGrid.classList.add('hidden');
+            } else {
+                noItemsMessage.classList.add('hidden');
+                itemsGrid.classList.remove('hidden');
+
+                itemsToRender.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out';
+                    card.innerHTML = `
+                        <img src="${item.imageUrl}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h4 class="font-bold text-lg text-gray-800 truncate">${item.name}</h4>
+                            <p class="text-gray-600 text-sm mt-1 h-10 overflow-hidden">${item.description}</p>
+                            <div class="mt-4 flex items-center text-sm text-gray-500">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                                <span>${item.location}</span>
+                            </div>
+                             <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <i data-lucide="clock" class="w-4 h-4 mr-2"></i>
+                                <span>${item.timestamp}</span>
+                            </div>
+                            <button class="mt-4 w-full bg-indigo-100 text-indigo-700 font-semibold py-2 rounded-lg hover:bg-indigo-200 transition">View Details</button>
+                        </div>
+                    `;
+                    itemsGrid.appendChild(card);
+                });
+            }
+             lucide.createIcons(); // Re-render icons after adding new HTML
+        }
+        
+        // --- Search/Filter ---
+        function filterItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredItems = items.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) || 
+                item.description.toLowerCase().includes(searchTerm) ||
+                item.location.toLowerCase().includes(searchTerm)
+            );
+            renderItems(filteredItems);
+        }
+
+        // --- Modal Logic ---
+        const modal = document.getElementById('postItemModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const postItemForm = document.getElementById('postItemForm');
+
+        function openModal() {
+            backdrop.classList.add('active');
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            backdrop.classList.remove('active');
+            modal.classList.remove('active');
+        }
+        
+        postItemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newItem = {
+                id: items.length + 1,
+                name: document.getElementById('item-name').value,
+                description: document.getElementById('description').value,
+                location: document.getElementById('location').value,
+                imageUrl: 'https://placehold.co/400x300/2ecc71/ffffff?text=New!',
+                timestamp: 'Just now'
+            };
+            items.unshift(newItem); // Add to the beginning of the array
+            renderItems(items);
+            closeModal();
+            postItemForm.reset();
+        });
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- Initial Render ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderItems(items);
+        });
+    </script>
+</body>
 </html>
