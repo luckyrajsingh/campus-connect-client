@@ -5,8 +5,12 @@ const Navbar = () => {
   const token = localStorage.getItem("userToken");
 
   const handleLogout = () => {
+    // 1. Remove the token from storage
     localStorage.removeItem("userToken");
-    window.location.href = "/login";
+    
+    // 2. Redirect to the homepage to force a full page reload
+    // This reliably resets the application's state.
+    window.location.href = "/"; 
   };
 
   return (
